@@ -1,46 +1,127 @@
-# Getting Started with Create React App
+# TypeScript와 styped-component
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## interface
 
-## Available Scripts
+interface란 object shape(객체 모양)을 TS에 설명해주는 TS의 개념
 
-In the project directory, you can run:
+```tsx
+// 기본형태
+const x = (a: number, b: number) => a + b;
 
-### `npm start`
+// 1번
+interface CircleProps {
+  bgColor: string;
+  // interface 안에 어떤 타입인지 설명해준다
+}
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+//  2번
+function Circle({ props }: CircleProps) {
+  return <div bgColor={props}></div>;
+  // props 라고 적어도됨
+}
+// 3번
+function Circle({ bgColor }: CircleProps) {
+  return <div bgColor={bgColor}></div>;
+}
+```
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## stlyed Component에 ts 사용법
 
-### `npm test`
+container 가 받는 props를 TS에게 잘 설명해주는 방식
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```tsx
+// 1번 방식
+// 스타일드 컴포넌트를 사용한다면
+// 보통 스타일을 정의할때
+interface ContainerProps{
+    bgColor: string;
+}
+const Container = styled.div<ContainerProps>`
+    background-color: ${(props) => props.bgColor}
+`
+// 2번 방식
+// 컴포넌트가 props를 받을때 사용하는것이 일반적
+interface CircleProps {
+    bgColor: string
+}
 
-### `npm run build`
+function Circle({bgColor} : CircleProps) {
+    return <Container bgColor={bgColor}>
+}
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## 선택적 type
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+타입은 다 required 속성을 가지고있지만
+선택적으로 주어야할때는
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```tsx
+interface Cirlce {
+  borderColor?: string;
+  // ? 끝에 붙입니다
+}
+```
 
-### `npm run eject`
+## default type
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+컴포넌트 뒤에 ?? 두개를 붙여줍니다
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```tsx
+//  1번째 방법
+function Circle({bgColor} : CircleProps) {
+    return <Container bgColor={bgColor} borderColor={borderColor ?? "white"}>
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+    // borderColor undefind일때 bgColor 같게 해준다
+    return <Container bgColor={bgColor} borderColor={borderColor ?? bgColor}>
+}
+```
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+```tsx
+// 2번째 방법
+function Circle({bgColor , borderColor = "white"} : CircleProps) {
+    return <Container bgColor={bgColor} borderColor={borderColor}>
+}
 
-## Learn More
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## useState<타입1|타입2> 로 타입의 종류를 늘려줄 수 있다.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```tsx
+function Circle({bgColor, borderColor}: CircleProps) {
+    const[counter,setCounter] = useState<number|string>(1)
+    setCounter('hello')
+
+    return <Container bgColor={bgColor} borderColor={borderColor}>
+}
+```
+
+## Form
+
+함수 onChange 를 inputElement 에 의해서 실행되게 하는 방법
+ReactJs Typescript 에선 currentTarget 사용을 택함
+
+```tsx
+function App() {
+  const [value, setValue] = useState("");
+  const onChange = (event: React.FormEvent<HTMLInputElement>) => {
+    console.log(event.currentTarget.value);
+    // event:React.FormEvent 같이 필요한 이벤트 변수는
+    // 공식문서와 구글링으로 필요할때 찾아야한다
+    const {
+      currentTarget: { value },
+    } = event;
+    setValue(value);
+    // 구조 분해할당과 객체 속성 축약의 조합으로 이루어진 코드
+  };
+  const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    console.log("hello", value);
+  };
+}
+```
+
+## theme 을 사용하기 위한방법
+
+- styled.d.ts파일을 src폴더내에 만들어준다
+  styledComponent 를 import 하고 defaultTheme을 지정해준다
+- src내 theme.ts를 만든다
